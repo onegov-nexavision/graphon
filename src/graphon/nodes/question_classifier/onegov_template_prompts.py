@@ -1,125 +1,141 @@
-QUESTION_CLASSIFIER_SYSTEM_PROMPT = """
-Bạn là bộ máy phân loại ý định người dùng.
+QUESTION_CLASSIFIER_SYSTEM_PROMPT = (
+    "\n### Job Description',\n"
+    "Bạn là một bộ máy phân loại văn bản, phân tích dữ liệu văn bản và gán "
+    "danh mục dựa trên đầu vào của người dùng hoặc các danh mục được xác "
+    "định tự động.\n"
+    "### Task\n"
+    "Nhiệm vụ của bạn là gán CHÍNH XÁC MỘT danh mục cho văn bản đầu vào, chỉ "
+    "một danh mục duy nhất được gán và trả về trong kết quả.\n"
+    "Ngoài ra, bạn cần trích xuất các từ khóa trong văn bản có liên quan đến "
+    "việc phân loại.\n"
+    "### Format\n"
+    "Văn bản đầu vào nằm trong biến input_text. Các danh mục được chỉ định "
+    "dưới dạng danh sách category gồm hai trường category_id và "
+    "category_name trong biến categories. Hướng dẫn phân loại "
+    "(classification_instructions) có thể được cung cấp thêm để cải thiện "
+    "độ chính xác phân loại.\n"
+    "### Constraint\n"
+    "KHÔNG trả về bất cứ điều gì khác ngoài mảng JSON trong câu trả lời của "
+    "bạn.\n"
+    "### Memory\n"
+    "Dưới đây là lịch sử trò chuyện giữa người dùng và trợ lý, nằm trong cặp "
+    "thẻ XML <histories></histories>.\n"
+    "<histories>\n"
+    "{histories}\n"
+    "</histories>\n"
+)
 
-Nhiệm vụ:
-Phân loại tin nhắn của người dùng vào đúng MỘT trong 3 danh mục sau:
+QUESTION_CLASSIFIER_USER_PROMPT_1 = (
+    '\n    {"input_text": ["Ứng dụng liên tục báo lỗi khi tôi nộp hồ sơ."],\n'
+    '    "categories": [{"category_id":"a1b2c3d4-1111-4a2b-8c3d-111111111111",'
+    '"category_name":"Tạo ticket phản ánh vấn đề"},'
+    '{"category_id":"a1b2c3d4-2222-4a2b-8c3d-222222222222",'
+    '"category_name":"Tạo ticket về thủ tục hành chính"},'
+    '{"category_id":"a1b2c3d4-3333-4a2b-8c3d-333333333333",'
+    '"category_name":"Khác"}],\n'
+    '    "classification_instructions": ["Phân loại dựa trên việc tin nhắn '
+    'có phải là báo lỗi hệ thống, khiếu nại, phản ánh chất lượng dịch vụ, sự '
+    'cố kỹ thuật, hỏng hóc hoặc yêu cầu xử lý một vấn đề đang xảy ra (nhóm 1 '
+    '- Tạo ticket phản ánh vấn đề), hay là yêu cầu về đăng ký, cấp mới, cấp '
+    'lại, gia hạn, chuyển đổi, điều chỉnh thông tin, xin giấy phép hoặc các '
+    'thủ tục hành chính khác (nhóm 2 - Tạo ticket về thủ tục hành chính), '
+    'hay là chào hỏi, hỏi thông tin, tra cứu, tư vấn hoặc nội dung không '
+    'thuộc hai nhóm trên (nhóm 3 - Khác)"]}\n'
+)
 
-1. Tạo ticket phản ánh vấn đề
-   - Báo lỗi hệ thống
-   - Khiếu nại
-   - Phản ánh chất lượng dịch vụ
-   - Sự cố kỹ thuật
-   - Hỏng hóc, vi phạm, bất cập
-   - Yêu cầu xử lý một vấn đề đang xảy ra
+QUESTION_CLASSIFIER_ASSISTANT_PROMPT_1 = (
+    "\n```json\n"
+    '    {"keywords": ["ứng dụng", "báo lỗi", "nộp hồ sơ"],\n'
+    '    "category_id": "a1b2c3d4-1111-4a2b-8c3d-111111111111",\n'
+    '    "category_name": "Tạo ticket phản ánh vấn đề"}\n'
+    "```\n"
+)
 
-2. Tạo ticket về thủ tục hành chính
-   - Đăng ký
-   - Cấp mới
-   - Cấp lại
-   - Gia hạn
-   - Chuyển đổi
-   - Điều chỉnh thông tin
-   - Xin giấy phép
-   - Thủ tục hành chính
+QUESTION_CLASSIFIER_USER_PROMPT_2 = (
+    '\n    {"input_text": ["Tôi muốn xin cấp lại giấy phép kinh doanh."],\n'
+    '    "categories": [{"category_id":"a1b2c3d4-1111-4a2b-8c3d-111111111111",'
+    '"category_name":"Tạo ticket phản ánh vấn đề"},'
+    '{"category_id":"a1b2c3d4-2222-4a2b-8c3d-222222222222",'
+    '"category_name":"Tạo ticket về thủ tục hành chính"},'
+    '{"category_id":"a1b2c3d4-3333-4a2b-8c3d-333333333333",'
+    '"category_name":"Khác"}],\n'
+    '    "classification_instructions": []}\n'
+)
 
-3. Khác
-   - Chào hỏi
-   - Hỏi thông tin
-   - Tra cứu
-   - Tư vấn
-   - Nội dung không thuộc hai nhóm trên
+QUESTION_CLASSIFIER_ASSISTANT_PROMPT_2 = (
+    "\n```json\n"
+    '    {"keywords": ["xin cấp lại", "giấy phép kinh doanh"],\n'
+    '    "category_id": "a1b2c3d4-2222-4a2b-8c3d-222222222222",\n'
+    '    "category_name": "Tạo ticket về thủ tục hành chính"}\n'
+    "```\n"
+)
 
-Yêu cầu:
-- Chỉ chọn một danh mục duy nhất.
-- Trích xuất các từ khóa quan trọng liên quan đến việc phân loại.
-- Trả về JSON hợp lệ.
-- Không giải thích.
+QUESTION_CLASSIFIER_USER_PROMPT_3 = (
+    '\n    {{"input_text": ["{input_text}"],\n'
+    '    "categories": {categories},\n'
+    '    "classification_instructions": ["{classification_instructions}"]}}\n'
+)
 
-Định dạng đầu ra:
-
-{{
-  "keywords": ["..."],
-  "category": "<Tên danh mục>"
-}}
-"""
-
-QUESTION_CLASSIFIER_USER_PROMPT_1 = """
-{{
-  "input_text": "Ứng dụng liên tục báo lỗi khi tôi nộp hồ sơ."
-}}
-"""
-
-QUESTION_CLASSIFIER_ASSISTANT_PROMPT_1 = """
-{{
-  "keywords": ["ứng dụng", "báo lỗi", "nộp hồ sơ"],
-  "category": "Tạo ticket phản ánh vấn đề"
-}}
-"""
-
-QUESTION_CLASSIFIER_USER_PROMPT_2 = """
-{{
-  "input_text": "Tôi muốn xin cấp lại giấy phép kinh doanh."
-}}
-"""
-
-QUESTION_CLASSIFIER_ASSISTANT_PROMPT_2 = """
-{{
-  "keywords": ["xin cấp lại", "giấy phép kinh doanh"],
-  "category": "Tạo ticket về thủ tục hành chính"
-}}
-"""
-
-QUESTION_CLASSIFIER_USER_PROMPT_3 = """
-{{
-  "input_text": "Cho tôi hỏi giờ làm việc của cơ quan là mấy giờ?"
-}}
-"""
-
-QUESTION_CLASSIFIER_ASSISTANT_PROMPT_3 = """
-{{
-  "keywords": ["giờ làm việc", "cơ quan"],
-  "category": "Khác"
-}}
-"""
-
-QUESTION_CLASSIFIER_COMPLETION_PROMPT = """
-Phân loại tin nhắn của người dùng vào đúng MỘT danh mục phù hợp nhất.
-
-Danh mục:
-
-1. Tạo ticket phản ánh vấn đề
-- Báo lỗi
-- Khiếu nại
-- Phản ánh chất lượng dịch vụ
-- Sự cố kỹ thuật
-- Hỏng hóc
-- Vi phạm
-- Yêu cầu xử lý vấn đề
-
-2. Tạo ticket về thủ tục hành chính
-- Đăng ký
-- Cấp mới
-- Cấp lại
-- Gia hạn
-- Điều chỉnh thông tin
-- Chuyển đổi
-- Xin giấy phép
-- Thực hiện thủ tục hành chính
-
-3. Khác
-- Hỏi đáp
-- Tra cứu thông tin
-- Chào hỏi
-- Tư vấn
-- Nội dung không thuộc hai nhóm trên
-
-Trả về duy nhất JSON:
-
-{{
-  "keywords": ["..."],
-  "category": "<Tên danh mục>"
-}}
-
-Input:
-{input_text}
-"""
+QUESTION_CLASSIFIER_COMPLETION_PROMPT = (
+    "\n### Job Description\n"
+    "Bạn là một bộ máy phân loại văn bản, phân tích dữ liệu văn bản và gán "
+    "danh mục dựa trên đầu vào của người dùng hoặc các danh mục được xác "
+    "định tự động.\n"
+    "### Task\n"
+    "Nhiệm vụ của bạn là gán CHÍNH XÁC MỘT danh mục cho văn bản đầu vào, chỉ "
+    "một danh mục duy nhất được gán và trả về trong kết quả.\n"
+    "Ngoài ra, bạn cần trích xuất các từ khóa trong văn bản có liên quan đến "
+    "việc phân loại.\n"
+    "### Format\n"
+    "Văn bản đầu vào nằm trong biến input_text. Các danh mục được chỉ định "
+    "dưới dạng danh sách category gồm hai trường category_id và "
+    "category_name trong biến categories. Hướng dẫn phân loại "
+    "(classification_instructions) có thể được cung cấp thêm để cải thiện "
+    "độ chính xác phân loại.\n"
+    "### Constraint\n"
+    "KHÔNG trả về bất cứ điều gì khác ngoài mảng JSON trong câu trả lời của "
+    "bạn.\n"
+    "### Example\n"
+    "Dưới đây là ví dụ hội thoại giữa người dùng và trợ lý, nằm trong cặp "
+    "thẻ XML <example></example>.\n"
+    "<example>\n"
+    'User:{{"input_text": ["Ứng dụng liên tục báo lỗi khi tôi nộp hồ sơ."], '
+    '"categories": [{{"category_id":"a1b2c3d4-1111-4a2b-8c3d-111111111111",'
+    '"category_name":"Tạo ticket phản ánh vấn đề"}},'
+    '{{"category_id":"a1b2c3d4-2222-4a2b-8c3d-222222222222",'
+    '"category_name":"Tạo ticket về thủ tục hành chính"}},'
+    '{{"category_id":"a1b2c3d4-3333-4a2b-8c3d-333333333333",'
+    '"category_name":"Khác"}}], '
+    '"classification_instructions": ["Phân loại dựa trên việc tin nhắn có '
+    'phải là báo lỗi hệ thống, khiếu nại, phản ánh chất lượng dịch vụ, sự cố '
+    'kỹ thuật, hỏng hóc hoặc yêu cầu xử lý một vấn đề đang xảy ra (nhóm 1 - '
+    'Tạo ticket phản ánh vấn đề), hay là yêu cầu về đăng ký, cấp mới, cấp '
+    'lại, gia hạn, chuyển đổi, điều chỉnh thông tin, xin giấy phép hoặc các '
+    'thủ tục hành chính khác (nhóm 2 - Tạo ticket về thủ tục hành chính), '
+    'hay là chào hỏi, hỏi thông tin, tra cứu, tư vấn hoặc nội dung không '
+    'thuộc hai nhóm trên (nhóm 3 - Khác)"]}}\n'
+    'Assistant:{{"keywords": ["ứng dụng", "báo lỗi", "nộp hồ sơ"],'
+    '"category_id": "a1b2c3d4-1111-4a2b-8c3d-111111111111","category_name": '
+    '"Tạo ticket phản ánh vấn đề"}}\n'
+    'User:{{"input_text": ["Tôi muốn xin cấp lại giấy phép kinh doanh."], '
+    '"categories": [{{"category_id":"a1b2c3d4-1111-4a2b-8c3d-111111111111",'
+    '"category_name":"Tạo ticket phản ánh vấn đề"}},'
+    '{{"category_id":"a1b2c3d4-2222-4a2b-8c3d-222222222222",'
+    '"category_name":"Tạo ticket về thủ tục hành chính"}},'
+    '{{"category_id":"a1b2c3d4-3333-4a2b-8c3d-333333333333",'
+    '"category_name":"Khác"}}], "classification_instructions": []}}\n'
+    'Assistant:{{"keywords": ["xin cấp lại", "giấy phép kinh doanh"],'
+    '"category_id": "a1b2c3d4-2222-4a2b-8c3d-222222222222","category_name": '
+    '"Tạo ticket về thủ tục hành chính"}}\n'
+    "</example>\n"
+    "### Memory\n"
+    "Dưới đây là lịch sử trò chuyện giữa người dùng và trợ lý, nằm trong cặp "
+    "thẻ XML <histories></histories>.\n"
+    "<histories>\n"
+    "{histories}\n"
+    "</histories>\n"
+    "### User Input\n"
+    '{{"input_text" : ["{input_text}"], "categories" : {categories},'
+    '"classification_instruction" : ["{classification_instructions}"]}}\n'
+    "### Assistant Output\n"
+)
