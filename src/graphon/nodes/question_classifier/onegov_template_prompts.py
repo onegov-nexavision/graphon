@@ -17,16 +17,11 @@ QUESTION_CLASSIFIER_SYSTEM_PROMPT = (
     "### Constraint\n"
     "KHÔNG trả về bất cứ điều gì khác ngoài mảng JSON trong câu trả lời của "
     "bạn.\n"
-    "### Memory\n"
-    "Dưới đây là lịch sử trò chuyện giữa người dùng và trợ lý, nằm trong cặp "
-    "thẻ XML <histories></histories>.\n"
-    "<histories>\n"
-    "{histories}\n"
-    "</histories>\n"
 )
 
 QUESTION_CLASSIFIER_USER_PROMPT_1 = (
     '\n    {"input_text": ["Ứng dụng liên tục báo lỗi khi tôi nộp hồ sơ."],\n'
+    '    "histories": ,\n'
     '    "categories": [{"category_id":"a1b2c3d4-1111-4a2b-8c3d-111111111111",'
     '"category_name":"Tạo ticket phản ánh vấn đề"},'
     '{"category_id":"a1b2c3d4-2222-4a2b-8c3d-222222222222",'
@@ -52,7 +47,8 @@ QUESTION_CLASSIFIER_ASSISTANT_PROMPT_1 = (
 )
 
 QUESTION_CLASSIFIER_USER_PROMPT_2 = (
-    '\n    {"input_text": ["Tôi muốn xin cấp lại giấy phép kinh doanh."],\n'
+    '\n    {"input_text": ["Ở Hà Nội"],\n'
+    '    "histories": Human: cấp CCCD\nAssistant: Tạo ticket về thủ tục hành chính,\n'
     '    "categories": [{"category_id":"a1b2c3d4-1111-4a2b-8c3d-111111111111",'
     '"category_name":"Tạo ticket phản ánh vấn đề"},'
     '{"category_id":"a1b2c3d4-2222-4a2b-8c3d-222222222222",'
@@ -72,6 +68,7 @@ QUESTION_CLASSIFIER_ASSISTANT_PROMPT_2 = (
 
 QUESTION_CLASSIFIER_USER_PROMPT_3 = (
     '\n    {{"input_text": ["{input_text}"],\n'
+    '    "histories": {histories},\n'
     '    "categories": {categories},\n'
     '    "classification_instructions": ["{classification_instructions}"]}}\n'
 )

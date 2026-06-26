@@ -603,6 +603,7 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
                 role=PromptMessageRole.USER,
                 text=QUESTION_CLASSIFIER_USER_PROMPT_3.format(
                     input_text=input_text,
+                    histories=memory_str,
                     categories=json.dumps(categories, ensure_ascii=False),
                     classification_instructions=instruction,
                 ),
