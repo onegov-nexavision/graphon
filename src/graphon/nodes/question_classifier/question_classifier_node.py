@@ -5,6 +5,7 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, override
+from importlib import import_module
 
 from graphon.entities.graph_init_params import GraphInitParams
 from graphon.enums import (
@@ -48,15 +49,6 @@ from graphon.utils.json_in_md_parser import parse_and_check_json_markdown
 
 from .entities import QuestionClassifierNodeData
 from .exc import InvalidModelTypeError
-from .template_prompts import (
-    QUESTION_CLASSIFIER_ASSISTANT_PROMPT_1,
-    QUESTION_CLASSIFIER_ASSISTANT_PROMPT_2,
-    QUESTION_CLASSIFIER_COMPLETION_PROMPT,
-    QUESTION_CLASSIFIER_SYSTEM_PROMPT,
-    QUESTION_CLASSIFIER_USER_PROMPT_1,
-    QUESTION_CLASSIFIER_USER_PROMPT_2,
-    QUESTION_CLASSIFIER_USER_PROMPT_3,
-)
 
 
 class _PassthroughPromptMessageSerializer:
@@ -545,6 +537,24 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
         memory: PromptMessageMemory | None,
         max_token_limit: int = 2000,
     ) -> list[LLMNodeChatModelMessage] | LLMNodeCompletionModelPromptTemplate:
+        try:
+            module = import_module(
+                f".{node_data.template_name}_template_prompts",
+                package=__package__,
+            )
+        except ModuleNotFoundError as e:
+            raise ValueError(
+                f"Unknown prompt template: {node_data.template_name!r}"
+            ) from e
+
+        QUESTION_CLASSIFIER_ASSISTANT_PROMPT_1 = module.QUESTION_CLASSIFIER_ASSISTANT_PROMPT_1
+        QUESTION_CLASSIFIER_ASSISTANT_PROMPT_2 = module.QUESTION_CLASSIFIER_ASSISTANT_PROMPT_2
+        QUESTION_CLASSIFIER_COMPLETION_PROMPT = module.QUESTION_CLASSIFIER_COMPLETION_PROMPT
+        QUESTION_CLASSIFIER_SYSTEM_PROMPT = module.QUESTION_CLASSIFIER_SYSTEM_PROMPT
+        QUESTION_CLASSIFIER_USER_PROMPT_1 = module.QUESTION_CLASSIFIER_USER_PROMPT_1
+        QUESTION_CLASSIFIER_USER_PROMPT_2 = module.QUESTION_CLASSIFIER_USER_PROMPT_2
+        QUESTION_CLASSIFIER_USER_PROMPT_3 = module.QUESTION_CLASSIFIER_USER_PROMPT_3
+
         model_mode = LLMMode(node_data.model.mode)
         classes = node_data.classes
         categories = []

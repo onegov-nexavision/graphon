@@ -37,6 +37,7 @@ class QuestionClassifierNodeData(BaseNodeData):
     instruction: str | None = None
     memory: MemoryConfig | None = None
     vision: VisionConfig = Field(default_factory=VisionConfig)
+    template_name: str = ""
 
     @property
     def structured_output_enabled(self) -> bool:
