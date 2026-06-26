@@ -21,7 +21,7 @@ QUESTION_CLASSIFIER_SYSTEM_PROMPT = (
 
 QUESTION_CLASSIFIER_USER_PROMPT_1 = (
     '\n    {"input_text": ["Ứng dụng liên tục báo lỗi khi tôi nộp hồ sơ."],\n'
-    '    "histories": ,\n'
+    '    "previous_input_texts": ,\n'
     '    "categories": [{"category_id":"a1b2c3d4-1111-4a2b-8c3d-111111111111",'
     '"category_name":"Tạo ticket phản ánh vấn đề"},'
     '{"category_id":"a1b2c3d4-2222-4a2b-8c3d-222222222222",'
@@ -48,7 +48,7 @@ QUESTION_CLASSIFIER_ASSISTANT_PROMPT_1 = (
 
 QUESTION_CLASSIFIER_USER_PROMPT_2 = (
     '\n    {"input_text": ["Ở Hà Nội"],\n'
-    '    "histories": Human: cấp CCCD\nAssistant: Tạo ticket về thủ tục hành chính,\n'
+    '    "previous_input_texts": cấp CCCD;cho trẻ em,\n'
     '    "categories": [{"category_id":"a1b2c3d4-1111-4a2b-8c3d-111111111111",'
     '"category_name":"Tạo ticket phản ánh vấn đề"},'
     '{"category_id":"a1b2c3d4-2222-4a2b-8c3d-222222222222",'
@@ -68,7 +68,7 @@ QUESTION_CLASSIFIER_ASSISTANT_PROMPT_2 = (
 
 QUESTION_CLASSIFIER_USER_PROMPT_3 = (
     '\n    {{"input_text": ["{input_text}"],\n'
-    '    "histories": {histories},\n'
+    '    "previous_input_texts": {previous_input_texts},\n'
     '    "categories": {categories},\n'
     '    "classification_instructions": ["{classification_instructions}"]}}\n'
 )
