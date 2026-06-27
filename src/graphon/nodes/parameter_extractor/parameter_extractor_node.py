@@ -517,7 +517,7 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
 
         query = prompt_module.FUNCTION_CALLING_EXTRACTOR_USER_TEMPLATE.format(
             content=query,
-            structure=json.dumps(node_data.get_parameter_json_schema()),
+            structure=json.dumps(node_data.get_parameter_json_schema(), ensure_ascii=False),
         )
 
         rest_token = self._calculate_rest_token(
@@ -563,7 +563,7 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
                             function=AssistantPromptMessage.ToolCall.ToolCallFunction(
                                 name=example["assistant"]["function_call"]["name"],
                                 arguments=json.dumps(
-                                    example["assistant"]["function_call"]["parameters"],
+                                    example["assistant"]["function_call"]["parameters"], ensure_ascii=False
                                 ),
                             ),
                         ),
@@ -712,13 +712,13 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
             example_messages.extend([
                 UserPromptMessage(
                     content=prompt_module.CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE.format(
-                        structure=json.dumps(example["user"]["json"]),
+                        structure=json.dumps(example["user"]["json"], ensure_ascii=False),
                         text=example["user"]["query"],
                         previous_texts=example["user"].get("previous_texts", ""),
                     ),
                 ),
                 AssistantPromptMessage(
-                    content=json.dumps(example["assistant"]["json"]),
+                    content=json.dumps(example["assistant"]["json"], ensure_ascii=False),
                 ),
             ])
 
@@ -1055,7 +1055,7 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
         if query_template is not None:
             assert query is not None, "'query' must be provided"
             input_text = query_template.format(
-                structure=json.dumps(node_data.get_parameter_json_schema()),
+                structure=json.dumps(node_data.get_parameter_json_schema(), ensure_ascii=False),
                 text=query,
                 previous_texts=previous_queries
             )
@@ -1088,7 +1088,7 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
                 .replace("}γγγ", "")  # noqa: RUF001
                 .replace(
                     "{ structure }",
-                    json.dumps(node_data.get_parameter_json_schema()),
+                    json.dumps(node_data.get_parameter_json_schema(), ensure_ascii=False),
                 ),
             )
         msg = f"Model mode {node_data.model.mode} not support."
