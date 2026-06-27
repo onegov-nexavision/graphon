@@ -115,6 +115,7 @@ class ParameterExtractorNodeData(BaseNodeData):
     memory: MemoryConfig | None = None
     reasoning_mode: Literal["function_call", "prompt"]
     vision: VisionConfig = Field(default_factory=VisionConfig)
+    template_name: str = ""
 
     @field_validator("reasoning_mode", mode="before")
     @classmethod

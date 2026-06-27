@@ -171,18 +171,18 @@ COMPLETION_GENERATE_JSON_PROMPT = (
 CHAT_GENERATE_JSON_PROMPT = (
     "You should always follow the instructions and output a valid JSON object.\n"
     "The structure of the JSON object you can found in the instructions.\n\n"
-    "### Instructions:\n"
-    "Some extra information are provided below, you must always follow the "
-    "instructions.\n"
-    "<instructions>\n"
-    "{instruction}\n"
-    "</instructions>\n\n"
     "### Memory\n"
     "Here are the chat histories between human and assistant, inside "
     "<histories></histories> XML tags.\n"
     "<histories>\n"
     "{histories}\n"
     "</histories>\n\n"
+    "### Instructions:\n"
+    "Some extra information are provided below, you should always follow the "
+    "instructions as possible as I can.\n"
+    "<instructions>\n"
+    "{instruction}\n"
+    "</instructions>"
 )
 
 CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE = (

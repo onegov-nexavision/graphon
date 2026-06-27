@@ -3,9 +3,13 @@ from __future__ import annotations
 import contextlib
 import json
 import logging
+import re
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime, timezone, timedelta
+from importlib import import_module
+from types import ModuleType
 from typing import Any, assert_never, overload, override
 
 from graphon.entities.graph_init_params import GraphInitParams
@@ -62,16 +66,6 @@ from .exc import (
     ParameterExtractorNodeError,
     RequiredParameterMissingError,
 )
-from .prompts import (
-    CHAT_EXAMPLE,
-    CHAT_GENERATE_JSON_PROMPT,
-    CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE,
-    COMPLETION_GENERATE_JSON_PROMPT,
-    FUNCTION_CALLING_EXTRACTOR_EXAMPLE,
-    FUNCTION_CALLING_EXTRACTOR_NAME,
-    FUNCTION_CALLING_EXTRACTOR_SYSTEM_PROMPT,
-    FUNCTION_CALLING_EXTRACTOR_USER_TEMPLATE,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +84,19 @@ _ARRAY_ITEM_TRANSFORMER_NAMES: dict[SegmentType, str] = {
     SegmentType.OBJECT: "_transform_object_value",
     SegmentType.BOOLEAN: "_transform_boolean_item_value",
 }
+
+
+def import_module_from_prefix(prefix: str) -> ModuleType:
+    try:
+        module = import_module(
+            f".{prefix}_prompts",
+            package=__package__,
+        )
+    except ModuleNotFoundError as e:
+        raise ValueError(
+            f"Unknown prompt template: {prefix!r}"
+        ) from e
+    return module
 
 
 def extract_json(text: str) -> str | None:
@@ -506,7 +513,9 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
         vision_detail: ImagePromptMessageContent.DETAIL | None = None,
     ) -> tuple[list[PromptMessage], list[PromptMessageTool]]:
         """Generate function call prompt."""
-        query = FUNCTION_CALLING_EXTRACTOR_USER_TEMPLATE.format(
+        prompt_module = import_module_from_prefix(node_data.template_name)
+
+        query = prompt_module.FUNCTION_CALLING_EXTRACTOR_USER_TEMPLATE.format(
             content=query,
             structure=json.dumps(node_data.get_parameter_json_schema()),
         )
@@ -541,7 +550,7 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
 
         # add function call messages before last user message
         example_messages = []
-        for example in FUNCTION_CALLING_EXTRACTOR_EXAMPLE:
+        for example in prompt_module.FUNCTION_CALLING_EXTRACTOR_EXAMPLE:
             tool_call_id = uuid.uuid4().hex
             example_messages.extend([
                 UserPromptMessage(content=example["user"]["query"]),
@@ -580,7 +589,7 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
 
         # generate tool
         tool = PromptMessageTool(
-            name=FUNCTION_CALLING_EXTRACTOR_NAME,
+            name=prompt_module.FUNCTION_CALLING_EXTRACTOR_NAME,
             description="Extract parameters from the natural language text",
             parameters=node_data.get_parameter_json_schema(),
         )
@@ -665,6 +674,8 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
         vision_detail: ImagePromptMessageContent.DETAIL | None = None,
     ) -> list[PromptMessage]:
         """Generate chat prompt."""
+        prompt_module = import_module_from_prefix(node_data.template_name)
+        
         rest_token = self._calculate_rest_token(
             node_data=node_data,
             query=query,
@@ -674,10 +685,8 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
         )
         prompt_template = self._get_prompt_engineering_prompt_template(
             node_data=node_data,
-            query=CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE.format(
-                structure=json.dumps(node_data.get_parameter_json_schema()),
-                text=query,
-            ),
+            query=query,
+            query_template=prompt_module.CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE,
             variable_pool=variable_pool,
             memory=memory,
             max_token_limit=rest_token,
@@ -699,12 +708,13 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
 
         # add example messages before last user message
         example_messages = []
-        for example in CHAT_EXAMPLE:
+        for example in prompt_module.CHAT_EXAMPLE:
             example_messages.extend([
                 UserPromptMessage(
-                    content=CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE.format(
+                    content=prompt_module.CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE.format(
                         structure=json.dumps(example["user"]["json"]),
                         text=example["user"]["query"],
+                        previous_texts=example["user"].get("previous_texts", ""),
                     ),
                 ),
                 AssistantPromptMessage(
@@ -973,6 +983,8 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
         memory: PromptMessageMemory | None,
         max_token_limit: int = 2000,
     ) -> list[LLMNodeChatModelMessage]:
+        prompt_module = import_module_from_prefix(node_data.template_name)
+        
         input_text = query
         memory_str = ""
         instruction = variable_pool.convert_template(node_data.instruction or "").text
@@ -986,7 +998,7 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
         if node_data.model.mode == LLMMode.CHAT:
             system_prompt_messages = LLMNodeChatModelMessage(
                 role=PromptMessageRole.SYSTEM,
-                text=FUNCTION_CALLING_EXTRACTOR_SYSTEM_PROMPT.format(
+                text=prompt_module.FUNCTION_CALLING_EXTRACTOR_SYSTEM_PROMPT.format(
                     histories=memory_str,
                     instruction=instruction,
                 ),
@@ -1024,9 +1036,12 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
         variable_pool: VariablePool,
         memory: PromptMessageMemory | None,
         max_token_limit: int = 2000,
+        query_template: str = None
     ) -> list[LLMNodeChatModelMessage] | LLMNodeCompletionModelPromptTemplate:
-        input_text = query
+        prompt_module = import_module_from_prefix(node_data.template_name)
+
         memory_str = ""
+        previous_queries = ""
         instruction = variable_pool.convert_template(node_data.instruction or "").text
 
         if memory and node_data.memory and node_data.memory.window:
@@ -1035,12 +1050,29 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
                 max_token_limit=max_token_limit,
                 message_limit=node_data.memory.window.size,
             )
+            previous_queries = ";".join(re.findall(r"Human:\s*(.*?)(?=\s*Assistant:|\s*$)", memory_str))
+
+        if query_template is not None:
+            assert query is not None, "'query' must be provided"
+            input_text = query_template.format(
+                structure=json.dumps(node_data.get_parameter_json_schema()),
+                text=query,
+                previous_texts=previous_queries
+            )
+        else:
+            input_text = query
+
         if node_data.model.mode == LLMMode.CHAT:
+            # GMT+7
+            gmt7 = timezone(timedelta(hours=7))
+            now = datetime.now(gmt7)
+            current_time = now.strftime("%Y-%m-%d %H:%M:%S")
             system_prompt_messages = LLMNodeChatModelMessage(
                 role=PromptMessageRole.SYSTEM,
-                text=CHAT_GENERATE_JSON_PROMPT.format(
+                text=prompt_module.CHAT_GENERATE_JSON_PROMPT.format(
                     histories=memory_str,
                     instruction=instruction,
+                    current_time=current_time
                 ),
             )
             user_prompt_message = LLMNodeChatModelMessage(
@@ -1050,7 +1082,7 @@ class ParameterExtractorNode(Node[ParameterExtractorNodeData]):
             return [system_prompt_messages, user_prompt_message]
         if node_data.model.mode == LLMMode.COMPLETION:
             return LLMNodeCompletionModelPromptTemplate(
-                text=COMPLETION_GENERATE_JSON_PROMPT
+                text=prompt_module.COMPLETION_GENERATE_JSON_PROMPT
                 .format(histories=memory_str, text=input_text, instruction=instruction)
                 .replace("{γγγ", "")  # noqa: RUF001
                 .replace("}γγγ", "")  # noqa: RUF001
