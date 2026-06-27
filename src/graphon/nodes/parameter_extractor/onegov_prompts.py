@@ -194,14 +194,15 @@ CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE = (
     "Trong thẻ XML <text></text> sẽ bao gồm chuỗi input của người dùng cần trả ra"
     "dưới dạng một đối tượng JSON.\n"
     "<text>\n"
-    "{previous_texts}{text}\n"
+    "{previous_texts} {text}\n"
     "</text>"
 )
 
 CHAT_EXAMPLE = [
     {
         "user": {
-            "query": "Đánh nhau ở Láng Hạ lúc 9h sáng 2026-05-22",
+            "previous_texts": "ngày 2026-05-22",
+            "query": "Đánh nhau ở Láng Hạ lúc 9h sáng",
             "json": {
                 "type": "object",
                 "properties": {
@@ -235,53 +236,6 @@ CHAT_EXAMPLE = [
                 "possible_solution": "Thông báo ngay cho lực lượng an ninh hoặc cơ quan có thẩm quyền để can thiệp kịp thời, đảm bảo an toàn cho người liên quan.",
                 "event_time": "2026-05-22/09:00",
                 "location": "Láng Hạ",
-                "clarification_needed": False,
-                "clarification_questions": [],
-            },
-        },
-    },
-    {
-        "user": {
-            "query": (
-                "<histories>\n"
-                "Human: Tôi muốn phản ánh về vụ vượt ẩu\n"
-                "Assistant: Vụ việc xảy ra ở đâu? Vào thời gian nào?\n"
-                "Human: Ở phố Láng Hạ, sáng nay lúc 8h30\n"
-                "</histories>"
-            ),
-            "json": {
-                "type": "object",
-                "properties": {
-                    "subject": {"type": "string"},
-                    "ticket_description": {"type": "string"},
-                    "possible_solution": {"type": "string"},
-                    "event_time": {"type": "string"},
-                    "location": {"type": "string"},
-                    "clarification_needed": {"type": "boolean"},
-                    "clarification_questions": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
-                },
-                "required": [
-                    "subject",
-                    "ticket_description",
-                    "possible_solution",
-                    "event_time",
-                    "location",
-                    "clarification_needed",
-                    "clarification_questions",
-                ],
-            },
-        },
-        "assistant": {
-            "text": "Tôi cần tổng hợp thông tin từ lịch sử hội thoại và trả về một object JSON hợp lệ.",
-            "json": {
-                "subject": "Phản ánh vụ vượt ẩu tại phố Láng Hạ",
-                "ticket_description": "Phản ánh hành vi vượt ẩu xảy ra trên phố Láng Hạ, tiềm ẩn nguy cơ mất an toàn giao thông.",
-                "possible_solution": "Ghi nhận và chuyển thông tin tới lực lượng cảnh sát giao thông để xác minh, xử lý; khuyến nghị bổ sung hình ảnh hoặc biển số nếu có.",
-                "event_time": "2026-05-22/08:30",
-                "location": "Phố Láng Hạ",
                 "clarification_needed": False,
                 "clarification_questions": [],
             },
