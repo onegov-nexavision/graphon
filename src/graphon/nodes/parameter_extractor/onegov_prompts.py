@@ -182,6 +182,7 @@ CHAT_GENERATE_JSON_PROMPT = (
     "- Cần làm rõ khi thiếu thông tin quan trọng (thời gian, địa điểm, đối tượng, mức độ) hoặc nội dung quá chung chung.\n"
     "- Nếu cần: clarification_needed = true, sinh 1-3 câu hỏi ngắn gọn, lịch sự, mỗi câu hỏi một thông tin còn thiếu. KHÔNG hỏi lại thông tin đã có (kể cả trong lịch sử).\n"
     "- Nếu đã đủ rõ: clarification_needed = false, clarification_questions = [].\n"
+    "- CHỈ SỬ DỤNG TIẾNG VIỆT.\n"
 )
 
 CHAT_GENERATE_JSON_USER_MESSAGE_TEMPLATE = (
